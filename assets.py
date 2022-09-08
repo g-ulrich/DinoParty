@@ -112,13 +112,58 @@ class WalkingEffect:
             self.items[i]['radius'] -= .1 if direction == (0, 0) else .2
             # add large white circle and small gray circle to queue
             queue_append({'layer': 0, 'type': 'circle', 'image': False, 'color': v['color'], 'rect': self.empty_rect,
-                          'pos': v['center'], 'radius': v['radius']})
+                          'pos': v['center'], 'radius': v['radius'], 'width': 0})
             queue_append(
                 {'layer': 0, 'type': 'circle', 'image': False, 'color': self.light_gray, 'rect': self.empty_rect,
-                 'pos': v['center'], 'radius': v['radius'] - 1})
+                 'pos': v['center'], 'radius': v['radius'] - 1, 'width': 0})
             if v['radius'] <= 0.0:
                 del self.items[i]
         return queue
+
+
+class Explosion:
+    def __init__(self, width=15, radius=1, color=(255, 255, 255), sec_color=(255, 200, 200)):
+        self.color = color
+        self.start = False
+        self.width = width
+        self.exp_index = -1
+        self.center = pygame.math.Vector2()
+        self.radius = radius
+        self.second_color = sec_color
+        self.hit_box_rect = pygame.Rect(0, 0, 0, 0)
+        self.empty_rect = pygame.Rect(0, 0, 0, 0)
+
+    def initiate(self, center_pos):
+        self.center.x = center_pos[0]
+        self.center.y = center_pos[1]
+        self.start = True
+        self.exp_index = 0
+
+    def iterate(self, offset=(0, 0)):
+        queue = {'layer': -100, 'type': 'circle', 'image': False, 'color': (255, 255, 255),
+                             'rect': self.empty_rect, 'pos': self.center,
+                             'radius': 0, 'angle': (0, 0), 'dir': -1, 'hit': 0, 'width': 0}
+        if self.start:
+            if self.width >= 1:
+                complete_offset = self.center - offset
+                self.radius += round(self.exp_index)
+                self.width -= round(self.exp_index)
+                self.exp_index = self.exp_index + .08 if self.width > 3 else self.exp_index + .01
+                queue = {'layer': 100, 'type': 'circle', 'image': False, 'color': choice([self.color, self.second_color]),
+                         'rect': self.empty_rect, 'pos': self.center if offset != (0, 0) else complete_offset,
+                         'radius': self.radius, 'angle': (0, 0), 'dir': -1, 'hit': 0, 'width': self.width}
+                self.hit_box_rect.x = complete_offset[0] - (self.radius / 2)
+                self.hit_box_rect.y = complete_offset[1] - (self.radius / 2)
+                self.hit_box_rect.w = self.radius
+                self.hit_box_rect.h = self.radius
+
+            elif self.width <= 0:
+                self.start = False
+                self.width = 15
+                self.exp_index = 0
+                self.center = pygame.math.Vector2()
+                self.radius = 1
+        return [queue]
 
 
 class Colors:
@@ -126,10 +171,14 @@ class Colors:
         self.red = (255, 0, 0)
         self.green = (0, 255, 0)
         self.blue = (0, 0, 255)
+        self.light_yellow = (244, 255, 69)
         self.green_forest = (85, 128, 85)
         self.green_plains = (139, 145, 80)
         self.black = (0, 0, 0)
         self.white = (255, 255, 255)
+
+    def flash(self):
+        return choice([self.white, self.light_yellow, self.red])
 
 
 class WallAssets:
@@ -180,6 +229,9 @@ class DinoDemoAssets:
 
 class GunAssets:
     def __init__(self):
+        self.explosion1 = Explosion()
+        self.explosion2 = Explosion()
+        self.colors = Colors()
         self.cross_hair = CrossHairsByPos()
         self.bullet_sheet = SpriteSheet('assets/bullet.png')
         self.bullet = self.bullet_sheet.get_image(0, 0, 16, 16)

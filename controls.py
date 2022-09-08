@@ -7,13 +7,16 @@ class Controls:
         self.joysticks = [pygame.joystick.Joystick(i) for i in range(pygame.joystick.get_count()) if
                           "xbox" in pygame.joystick.Joystick(i).get_name().lower()]
         self.controller_type = [i.get_name() for i in self.joysticks][0] if self.joysticks else "Keyboard"
+        pos = pygame.mouse.get_pos()
+        self.motion = pygame.math.Vector2((pos[0], pos[1]))
+        self.joy_motion = pygame.math.Vector2((0, 0))
         self.obj = {'pressed': [],
                     '1': {'up': False, 'down': False, 'right': False,
                            'left': False, 'space': False, 'run': False, 'esc': False,
-                           'restart': False, 'zoom_in': False, 'zoom_out': False},
+                           'restart': False, 'zoom_in': False, 'zoom_out': False, 'motion': self.motion},
                     '2': {'up': False, 'down': False, 'right': False,
                            'left': False, 'space': False, 'run': False, 'esc': False,
-                           'restart': False, 'zoom_in': False, 'zoom_out': False}
+                           'restart': False, 'zoom_in': False, 'zoom_out': False, 'motion': self.motion}
                     }
 
     def start_rumble(self, duration=1):
@@ -34,6 +37,9 @@ class Controls:
         # computer keys pressed
         self.obj['pressed'] = pressed
         if not self.joysticks:
+            # pos = pygame.mouse.get_pos()
+            # self.obj['1']['motion'].x = pos[0]
+            # self.obj['1']['motion'].y = pos[1]
             # player 1
             self.obj['1']['left'] = True if pressed[pygame.K_LEFT] else False
             self.obj['1']['down'] = True if pressed[pygame.K_DOWN] else False
@@ -114,3 +120,20 @@ class Controls:
                 self.obj[f'{player_num}']['left'] = True if event.value == (-1, 0) else False
                 self.obj[f'{player_num}']['up'] = True if event.value == (0, 1) else False
                 self.obj[f'{player_num}']['down'] = True if event.value == (0, -1) else False
+            if event.type == pygame.JOYAXISMOTION:
+                if event.axis < 2:
+                    # player_num = event.joy + 1
+                    self.joy_motion[event.axis] = event.value
+
+    def update_motion(self):
+        if self.joysticks:
+            if abs(self.joy_motion.x) < 0.1:
+                self.joy_motion.x = 0
+            if abs(self.joy_motion.y) < 0.1:
+                self.joy_motion.y = 0
+            self.obj[f'1']['motion'].x += round(self.joy_motion.x * 10, 4)
+            self.obj[f'1']['motion'].y += round(self.joy_motion.y * 10, 4)
+        else:
+            pos = pygame.mouse.get_pos()
+            self.obj[f'1']['motion'].x = pos[0]
+            self.obj[f'1']['motion'].y = pos[1]

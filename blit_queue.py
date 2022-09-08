@@ -20,8 +20,11 @@ class GraphicsQueue:
                 if obj['type'] == 'image' and obj['layer'] != 100:
                     surface.blit(obj['image'], obj['pos'])
                 elif obj['type'] == 'circle':
-                    pygame.draw.circle(surface, obj['color'], obj['pos'], obj['radius'])
-                elif obj['type'] == 'rect':
+                    if obj['width'] != 0:
+                        pygame.draw.circle(surface, obj['color'], obj['pos'], obj['radius'], obj['width'])
+                    else:
+                        pygame.draw.circle(surface, obj['color'], obj['pos'], obj['radius'])
+                elif obj['type'] == 'rect' and not obj['layer'] >= 100:
                     if obj['radius'] != 0:
                         # radius acts as width here. mentioned in the CrossHairs class
                         pygame.draw.rect(surface, obj['color'], obj['rect'], obj['radius'])
@@ -30,3 +33,4 @@ class GraphicsQueue:
 
         # bottom wall reserved for highest layer
         [surface.blit(obj['image'], obj['pos']) for obj in array if obj['type'] == 'image' and obj['layer'] >= 100]
+        [pygame.draw.rect(surface, obj['color'], obj['rect'], obj['radius']) for obj in array if obj['type'] == 'rect' and obj['layer'] >= 100]

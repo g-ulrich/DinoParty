@@ -18,7 +18,7 @@ class DinoDemo:
         self.level_img_index = 0
         self.level_img_timer = datetime.now()
         self.level_rect = self.level_img.get_rect()
-        self.gun = Gun("1", self.level_rect)
+        self.gun = Gun("1", self.level_rect, self.sounds)
         # sign offset from center
         self.sign_offset = pygame.math.Vector2((--10, 20))
         self.walls = self.level_walls()
@@ -28,9 +28,9 @@ class DinoDemo:
         self.screen_fill_color = (92, 105, 159)
         # init player one (max two players)
         self.p1 = Player(1, self.sounds, self.level_rect.topleft + pygame.math.Vector2((30, 30)))
-        # self.p2 = Player(2, self.sounds, self.level_rect.bottomleft + pygame.math.Vector2((30, -60)))
+        self.p2 = Player(2, self.sounds, self.level_rect.bottomleft + pygame.math.Vector2((30, -60)), disable_movement=True)
         # TODO add method to check if two players
-        self.two_players = False
+        self.two_players = True
 
     def level_walls(self):
         """
@@ -88,7 +88,7 @@ class DinoDemo:
                             'pos': (0, 0), 'radius': 0})
         # wooden sign with message
         queued_wooden_sign = [
-            {'layer': 7, 'type': 'image', 'image': self.assets.decorations.wooden_sign_on_rock, 'color': (0, 0, 0),
+            {'layer': 99, 'type': 'image', 'image': self.assets.decorations.wooden_sign_on_rock, 'color': (0, 0, 0),
              'rect': self.assets.decorations.wooden_sign_on_rock.get_rect(),
              'pos': self.level_rect.center - self.sign_offset, 'radius': 0}]
         # returns queued objects to blit, it proper order

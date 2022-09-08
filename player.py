@@ -9,7 +9,8 @@ class Player:
     Update method returns queue to be displayed from minigame class calling it.
     """
 
-    def __init__(self, player_num, sounds, spawn_pos):
+    def __init__(self, player_num, sounds, spawn_pos, disable_movement=False):
+        self.disable_movement = disable_movement
         self.sounds = sounds
         self.colors = Colors()
         self.assets = PlayerAssets(player_num)
@@ -27,6 +28,7 @@ class Player:
         self.sprite_move_i = 0  # 7
         self.sprite_idle_i = 0  # 4
         self.sprite_hit_i = 0  # 2
+        self.hit = -1
         self.facing_right = True
         # only left or right.
         self.facing_up = False
@@ -42,10 +44,12 @@ class Player:
         # empty rect for queue
         self.empty_rect = pygame.Rect(0, 0, 0, 0)
 
+    def update_hit(self):
+        self.hit += 1
+
     def update_sprite(self, running):
         walking = True if not running and self.direction != (0, 0) else False
         running = True if running else False
-        hit = False  # add hit method here
         # respawn = False  # add respawn method here
         if self.facing_right and self.direction.x == -1:
             self.sprite_move_i = 0  # 7
@@ -103,7 +107,7 @@ class Player:
                     self.sprite_move_i = self.sprite_move_i + 1 if self.sprite_move_i < len(
                         self.assets.dino_run) - 1 else 0
 
-        elif hit:
+        elif self.hit >= 0:
             if (datetime.now() - self.hit_timer).total_seconds() > .15:
                 self.hit_timer = datetime.now()
                 if self.facing_right:
@@ -114,6 +118,7 @@ class Player:
                     self.img = self.assets.dino_hit_flip[self.sprite_hit_i]
                     self.sprite_hit_i = self.sprite_hit_i + 1 if self.sprite_hit_i < len(
                         self.assets.dino_hit) - 1 else 0
+                self.hit -= 1
         else:
             # idle
             if (datetime.now() - self.idle_timer).total_seconds() > .2:
@@ -128,28 +133,32 @@ class Player:
                         self.assets.dino_idle) - 1 else 0
 
     def set_movement(self, controls, level_walls, movable_object_array):
-        hit_vector = self.check_walls(level_walls)
-        hit_vector2 = self.check_movable_objects(movable_object_array)
-        running = True if controls.obj[self.player_num]['run'] else False
-        speed = self.run_speed if running else self.walk_speed
-        self.direction.x = 0
-        self.direction.y = 0
-        if controls.obj[self.player_num]['up'] and hit_vector.y != -1 and hit_vector2.y != -1:
+        if not self.disable_movement:
+            hit_vector = self.check_walls(level_walls)
+            hit_vector2 = self.check_movable_objects(movable_object_array)
+            running = True if controls.obj[self.player_num]['run'] else False
+            speed = self.run_speed if running else self.walk_speed
             self.direction.x = 0
-            self.direction.y = -1
-            # speed = self.run_speed - .5 if running else self.walk_speed
-        if controls.obj[self.player_num]['down'] and hit_vector.y != 1 and hit_vector2.y != 1:
-            self.direction.x = 0
-            self.direction.y = 1
-            # speed = self.run_speed - .5 if running else self.walk_speed
-        if controls.obj[self.player_num]['left'] and hit_vector.x != -1 and hit_vector2.x != -1:
-            self.direction.x = -1
             self.direction.y = 0
-        if controls.obj[self.player_num]['right'] and hit_vector.x != 1 and hit_vector2.x != 1:
-            self.direction.x = 1
-            self.direction.y = 0
-        if self.direction.x != 0:
-            self.last_direction.x = self.direction.x
+            if controls.obj[self.player_num]['up'] and hit_vector.y != -1 and hit_vector2.y != -1:
+                self.direction.x = 0
+                self.direction.y = -1
+                # speed = self.run_speed - .5 if running else self.walk_speed
+            if controls.obj[self.player_num]['down'] and hit_vector.y != 1 and hit_vector2.y != 1:
+                self.direction.x = 0
+                self.direction.y = 1
+                # speed = self.run_speed - .5 if running else self.walk_speed
+            if controls.obj[self.player_num]['left'] and hit_vector.x != -1 and hit_vector2.x != -1:
+                self.direction.x = -1
+                self.direction.y = 0
+            if controls.obj[self.player_num]['right'] and hit_vector.x != 1 and hit_vector2.x != 1:
+                self.direction.x = 1
+                self.direction.y = 0
+            if self.direction.x != 0:
+                self.last_direction.x = self.direction.x
+        else:
+            running = False
+            speed = self.walk_speed
         self.update_sprite(running)
         self.update_rects(self.direction * speed)
 

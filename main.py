@@ -19,6 +19,7 @@ class Game:
             # check player events
             pressed = pygame.key.get_pressed()
             self.controls.activated_pressed(pressed)
+            self.controls.update_motion()
             for event in pygame.event.get():
                 self.controls.activated_controler(event)
                 self.controls.update_joysticks(event)
