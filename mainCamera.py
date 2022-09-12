@@ -86,6 +86,8 @@ class SpriteGroup(pygame.sprite.Group):
         self.handler.mini_game.update(self.camera_surface, controls, self.zoom_scale)
 
         self.blit_screen_surface(controls)
+        controls.blit_controller_message()
+
 
         # message block
         # r = pygame.Rect(200, self.screen_surface_size[1] - 200, self.screen_surface_size[0] - 400, 190)
@@ -94,7 +96,3 @@ class SpriteGroup(pygame.sprite.Group):
         # pygame.draw.rect(self.screen_surface, (255, 255, 255), r)
 
         # self.assets.cross.update(self.screen_surface)
-
-
-
-

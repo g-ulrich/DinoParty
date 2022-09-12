@@ -9,7 +9,7 @@ class Game:
     def __init__(self):
         pygame.init()
         self.general = General()
-        self.controls = Controls()
+        self.controls = Controls(self.general)
         self.colors = Colors()
         # based off mini game select self main_group needs to be updated again TODO
         self.main_group = SpriteGroup(self.general, self.colors)
@@ -19,7 +19,7 @@ class Game:
             # check player events
             pressed = pygame.key.get_pressed()
             self.controls.activated_pressed(pressed)
-            self.controls.update_motion()
+            self.controls.update_mouse()
             for event in pygame.event.get():
                 self.controls.activated_controler(event)
                 self.controls.update_joysticks(event)

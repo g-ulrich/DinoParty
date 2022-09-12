@@ -11,6 +11,7 @@ class DinoDemo:
     def __init__(self, colors, sounds):
         # mouse visibility
         self.sounds = sounds
+        self.sounds.play_demo_song()
         self.graphics_queue = GraphicsQueue()
         self.colors = colors
         self.assets = DinoDemoAssets()
@@ -22,15 +23,19 @@ class DinoDemo:
         # sign offset from center
         self.sign_offset = pygame.math.Vector2((--10, 20))
         self.walls = self.level_walls()
+        self.sign_x_timer = datetime.now()
         # empty rect for queue
         self.empty_rect = pygame.Rect(0, 0, 0, 0)
         self.grasses = self.level_grass()
         self.screen_fill_color = (92, 105, 159)
         # init player one (max two players)
         self.p1 = Player(1, self.sounds, self.level_rect.topleft + pygame.math.Vector2((30, 30)))
-        self.p2 = Player(2, self.sounds, self.level_rect.bottomleft + pygame.math.Vector2((30, -60)), disable_movement=True)
+        self.p2 = Player(2, self.sounds, self.level_rect.bottomleft + pygame.math.Vector2((30, -60)),
+                         disable_movement=True)
         # TODO add method to check if two players
         self.two_players = True
+        # need cross hair
+        self.need_cross_hair = True
 
     def level_walls(self):
         """
@@ -70,6 +75,34 @@ class DinoDemo:
 
         return queue1 + queue2
 
+    def blit_wood_sign(self, controls):
+        # wooden sign with message
+        if self.p1.body_rect.colliderect(self.walls['obstacle_stone_sign']):
+            if controls.joysticks:
+                controls.update_controller_message("Controls",
+                    "Welcome to the demo!" +
+                    "\nPress (Y) to run." +
+                    "\nPress (B) to shoot." +
+                    "\nRight bumper zooms screen in." +
+                    "\nLeft bumper zooms screen out." +
+                    "\nPress the back button to go to main menu. :)"
+                )
+            else:
+                controls.update_controller_message("Controls",
+                    "Welcome to the demo!" +
+                    "\nPlayer 1 uses [C] to run and player 2 uses [Z]." +
+                    "\nPlayer 1 uses [SPACE] to shoot and player 2 uses [X]." +
+                    "\nPress [2] to zoom screen in." +
+                    "\nPress [1] to zoom screen out." +
+                    "\nPress the ESC button to go to main menu. :)"
+                )
+        sign = [
+            {'layer': 99, 'type': 'image', 'image': self.assets.decorations.wooden_sign_on_rock, 'color': (0, 0, 0),
+             'rect': self.assets.decorations.wooden_sign_on_rock.get_rect(),
+             'pos': self.level_rect.center - self.sign_offset, 'radius': 0}
+        ]
+        return sign
+
     def blit_level(self, surface, controls, zoom_scale):
         level_queue = []
         if (datetime.now() - self.level_img_timer).total_seconds() > .8:
@@ -87,10 +120,7 @@ class DinoDemo:
                             'rect': self.empty_rect,
                             'pos': (0, 0), 'radius': 0})
         # wooden sign with message
-        queued_wooden_sign = [
-            {'layer': 99, 'type': 'image', 'image': self.assets.decorations.wooden_sign_on_rock, 'color': (0, 0, 0),
-             'rect': self.assets.decorations.wooden_sign_on_rock.get_rect(),
-             'pos': self.level_rect.center - self.sign_offset, 'radius': 0}]
+        queued_wooden_sign = self.blit_wood_sign(controls)
         # returns queued objects to blit, it proper order
         queued_list_obj = self.update_player(surface, controls)
         # blit guns

@@ -220,18 +220,34 @@ class Player:
         """
         - used for debug
         """
-        # pygame.draw.rect(surface, self.colors.red, self.rect, 1)
+        pygame.draw.rect(surface, self.colors.red, self.rect, 1)
         pygame.draw.rect(surface, self.colors.green, self.body_rect, 1)
-        # pygame.draw.rect(surface, self.colors.black, self.torso_rect, 1)
-        # pygame.draw.rect(surface, self.colors.blue, self.feet_rect, 1)
+        pygame.draw.rect(surface, self.colors.black, self.torso_rect, 1)
+        pygame.draw.rect(surface, self.colors.blue, self.feet_rect, 1)
+
+    def blit_player_bubble(self):
+        if self.player_num == 2:
+            color = (188, 77, 79)  # red
+        else:
+            # default to player 1 color
+            color = (77, 146, 188)  # blue
+        w, h = 3, 4
+        midtop_x, midtop_y = self.rect.midtop[0] - (self.rect.size[0]/4), self.rect.midtop[1] - 10
+        left = (midtop_x + w, midtop_y + (h * 2))
+        top = (midtop_x + (w * 2), midtop_y + (h * 3))
+        right = (midtop_x + (w * 3), midtop_y + (h * 2))
+        # rect is points for polygon
+        return [{'layer': 4, 'type': 'polygon', 'image': False, 'color': color,
+                'rect': [left, top, right], 'pos': self.rect.midtop, 'radius': 0}]
 
     def update(self, surface, controls, level_walls, collidables=[]):
         self.set_movement(controls, level_walls, collidables)
         dust_path_queue = self.moving_dust.update_effect(surface, self.feet_rect, self.direction)
+        player_bubble_queue = self.blit_player_bubble()
         # add dino image and dino shadow image to queue
         return dust_path_queue + [
             {'layer': 3, 'type': 'image', 'image': self.assets.dino_shadow, 'color': (0, 0, 0),
              'rect': self.empty_rect, 'pos': self.rect.topleft, 'radius': 0},
             {'layer': 4, 'type': 'image', 'image': self.img, 'color': (0, 0, 0), 'rect': self.empty_rect,
              'pos': self.rect.topleft, 'radius': 0}
-        ]
+        ] + player_bubble_queue

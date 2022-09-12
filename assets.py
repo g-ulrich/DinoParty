@@ -149,7 +149,7 @@ class Explosion:
                 self.radius += round(self.exp_index)
                 self.width -= round(self.exp_index)
                 self.exp_index = self.exp_index + .08 if self.width > 3 else self.exp_index + .01
-                queue = {'layer': 100, 'type': 'circle', 'image': False, 'color': choice([self.color, self.second_color]),
+                queue = {'layer': 99, 'type': 'circle', 'image': False, 'color': choice([self.color, self.second_color]),
                          'rect': self.empty_rect, 'pos': self.center if offset != (0, 0) else complete_offset,
                          'radius': self.radius, 'angle': (0, 0), 'dir': -1, 'hit': 0, 'width': self.width}
                 self.hit_box_rect.x = complete_offset[0] - (self.radius / 2)
@@ -209,6 +209,12 @@ class DecorationAssets:
         self.grass5 = self.grass_sheet.get_image(35, 0, 7, 7).convert()
         self.grass5.set_colorkey((255, 255, 255))
         self.grasses = [self.grass, self.grass1, self.grass2, self.grass4, self.grass5] + ([self.grass3] * 20)
+
+
+class ControlsAssets:
+    def __init__(self):
+        self.font = Font(40)
+        self.large_font = Font(50)
 
 
 class DinoDemoAssets:

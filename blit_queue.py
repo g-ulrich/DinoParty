@@ -11,6 +11,10 @@ class GraphicsQueue:
         # re-arrange image layer index based on y value
         array = sorted(array, key=lambda item: item.get("pos")[1])
         # first layers
+
+        # circles without width, width == 0
+        # [pygame.draw.circle(surface, obj['color'], obj['pos'], obj['radius']) for obj in array if obj['type'] == 'circle' and obj['layer'] < 0]
+        # images
         [surface.blit(obj['image'], obj['pos']) for obj in array if obj['type'] == 'image' and obj['layer'] < 0]
 
         # loop through the obj queue
@@ -33,4 +37,8 @@ class GraphicsQueue:
 
         # bottom wall reserved for highest layer
         [surface.blit(obj['image'], obj['pos']) for obj in array if obj['type'] == 'image' and obj['layer'] >= 100]
-        [pygame.draw.rect(surface, obj['color'], obj['rect'], obj['radius']) for obj in array if obj['type'] == 'rect' and obj['layer'] >= 100]
+        [pygame.draw.rect(surface, obj['color'], obj['rect'], obj['radius']) for obj in array if
+         obj['type'] == 'rect' and obj['layer'] >= 100]
+        # rect is points for polygon
+        [pygame.draw.polygon(surface, obj['color'], obj['rect']) for obj in array if obj['type'] == 'polygon']
+

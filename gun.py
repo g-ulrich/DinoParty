@@ -15,7 +15,8 @@ class Gun:
         self.rect = self.gun_img.get_rect()
         self.torso_rect_offset = pygame.math.Vector2((-7, -9))
         # bullets will be 5 bullets, due to smoke affect that follows bullets
-        self.max_bullets = 10
+        self.max_bullets = 5
+        self.bullet_count = 0
         self.bullet_speed = 2
         self.bullets = []
         self.bullet_timer = datetime.now()
@@ -34,7 +35,7 @@ class Gun:
         if self.bullets[b_index]['hit'] == 1:
             self.sounds.play_hit_wall()
             # add bullet bounce affect
-            self.bullets.append({'layer': 100, 'type': 'circle', 'image': False, 'color': (255, 255, 255),
+            self.bullets.append({'layer': 99, 'type': 'circle', 'image': False, 'color': (255, 255, 255),
                                  'rect': b_obj['rect'],
                                  'pos': b_obj['pos'],
                                  'radius': 5, 'angle': b_obj['angle'], 'dir': b_obj['dir'], 'hit': 0, 'width': 0})
@@ -49,9 +50,10 @@ class Gun:
         elif self.bullets[b_index]['hit'] == 2:
             self.sounds.play_fart()
             # add bullet bounce affect
-            self.bullets.append({'layer': 100, 'type': 'circle', 'image': False, 'color': (255, 255, 255),
+            self.bullets.append({'layer': 99, 'type': 'circle', 'image': False, 'color': (255, 255, 255),
                                  'rect': b_obj['rect'], 'pos': b_obj['pos'], 'radius': 5,
                                  'angle': b_obj['angle'], 'dir': b_obj['dir'], 'hit': 0, 'width': 0})
+            self.bullet_count -= 1
             self.delete_bullet_obj_by_index(b_index)
 
     def update_bullets(self, walls, controls, slope, crosshair_pos, gun_pos, gun_img, character_direction,
@@ -61,17 +63,18 @@ class Gun:
             # check bullet timer and add bullets
             if (datetime.now() - self.bullet_timer).total_seconds() > .2:
                 self.bullet_timer = datetime.now()
-                if len(self.bullets) < self.max_bullets:
+                if self.bullet_count < self.max_bullets:
                     self.sounds.play_shot()
                     gun_rect = pygame.Rect(gun_pos[0] + 8, gun_pos[1] + 8, 2, 2)
                     gun_pos = pygame.math.Vector2((gun_pos[0] + 8, gun_pos[1] + 8))
                     # bullet image
+                    self.bullet_count += 1
                     self.bullets.append(
                         {'layer': -1, 'type': 'image', 'image': self.assets.bullet, 'color': (38, 43, 68),
                          'rect': gun_rect, 'pos': gun_pos, 'radius': 0,
                          'angle': slope, 'dir': character_direction.x, 'hit': 0})
                     # init explosion out of gun, gets deleted really quickly.
-                    self.bullets.append({'layer': 100, 'type': 'circle', 'image': False, 'color': (255, 255, 255),
+                    self.bullets.append({'layer': 99, 'type': 'circle', 'image': False, 'color': (255, 255, 255),
                                          'rect': gun_rect, 'pos': gun_pos, 'radius': 5,
                                          'angle': slope, 'dir': character_direction.x, 'hit': 0, 'width': 0})
 
@@ -86,7 +89,8 @@ class Gun:
                         pos = (b_obj['pos'][0] + (b_obj['angle'][0] * 3), b_obj['pos'][1] + (b_obj['angle'][1] * 3))
                     else:
                         pos = (b_obj['pos'][0] - (b_obj['angle'][0] * 3), b_obj['pos'][1] - (b_obj['angle'][1] * 3))
-                    self.bullets.append({'layer': 1, 'type': 'circle', 'image': False, 'color': (255, 255, 255),
+                    # smoke affect
+                    self.bullets.append({'layer': 98, 'type': 'circle', 'image': False, 'color': (255, 255, 255),
                                          'rect': self.empty_rect, 'pos': pos, 'radius': 3,
                                          'angle': slope, 'dir': character_direction.x, 'hit': 0, 'width': 0})
                 b_obj['pos'] += [(i * self.bullet_speed) * b_obj['dir'] for i in b_obj['angle']]
@@ -110,6 +114,7 @@ class Gun:
                         self.assets.explosion1.initiate(b_obj['pos'])
                     else:
                         self.assets.explosion2.initiate(b_obj['pos'])
+                    self.bullet_count -= 1
                     c_obj.update_hit()
                     self.sounds.play_hurt()
                     self.delete_bullet_obj_by_index(b_index)
@@ -121,12 +126,12 @@ class Gun:
         - Called from minigame class
         """
         # crosshair stuff
-        x, y = controls.obj[self.player_num]['motion']
+        x, y = controls.obj[self.player_num]['mouse']
         # x, y = pygame.mouse.get_pos()
         # close if follows mouse movement but is off because of different dimensions of level and window
         end_pos = (x - self.level_rect.w) / zoom_scale, (y - self.level_rect.h) / zoom_scale
         start_pos = self.level_rect.x + torso_rect.centerx, self.level_rect.y + torso_rect.centery
-        # self.assets.cross_hair.update(surface, end_pos)
+
         cross_hair_array = self.assets.cross_hair.update(end_pos, self.level_rect)
         # gun stuff
         self.rect.center = torso_rect.center + self.torso_rect_offset
@@ -146,13 +151,6 @@ class Gun:
         bullets_list = self.update_bullets(walls, controls, slope, end_pos, gun_pos, gun_img, character_direction,
                                            moving_obj_classes)
         # -1 makes sure the gun is behind the player
-        return [
-                   #    {'layer': -1 if character_direction.x == -1 else 6,
-                   #  'type': 'image', 'image': self.assets.bullet, 'color': (0, 0, 0),
-                   #  'rect': self.assets.bullet_rect, 'pos': (0, 0), 'radius': 0},
-                   # {'layer': -1 if character_direction.x == -1 else 5,
-                   #  'type': 'rect', 'image': False, 'color': (0, 255, 0),
-                   #  'rect': self.assets.bullet_rect, 'pos': (0, 0), 'radius': 1},
-                   {'layer': -1 if character_direction.x == -1 else 5,
+        return [ {'layer': -1 if character_direction.x == -1 else 5,
                     'type': 'image', 'image': gun_img, 'color': (0, 0, 0),
                     'rect': self.rect, 'pos': gun_pos, 'radius': 0}] + cross_hair_array + bullets_list
