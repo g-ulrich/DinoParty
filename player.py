@@ -24,7 +24,7 @@ class Player:
         self.walk_speed = 1
         self.run_speed = 2
         # player 1 or 2 indexes
-        self.player_num = f"{player_num}"
+        self.player_num = str(player_num)
         self.sprite_move_i = 0  # 7
         self.sprite_idle_i = 0  # 4
         self.sprite_hit_i = 0  # 2
@@ -39,6 +39,8 @@ class Player:
         self.walk_sound_timer = datetime.now()
         self.run_timer = datetime.now()
         self.hit_timer = datetime.now()
+        # player bubble timer
+        self.player_bubble_timer = datetime.now()
         # player walking affect
         self.moving_dust = WalkingEffect()
         # empty rect for queue
@@ -226,19 +228,34 @@ class Player:
         pygame.draw.rect(surface, self.colors.blue, self.feet_rect, 1)
 
     def blit_player_bubble(self):
-        if self.player_num == 2:
-            color = (188, 77, 79)  # red
+        seconds = (datetime.now() - self.player_bubble_timer).total_seconds()
+        if seconds < 5:
+            # default to player 1
+            color = (188, 77, 79) if self.player_num == '2' else (77, 146, 188)
+            img = self.assets.p2_bubble if self.player_num == '2' else self.assets.p1_bubble
+            x, y = self.rect.topleft[0] + 5, self.rect.topleft[1] - 12
+            if seconds > 4.8 and self.assets.p1_bubble_rect.w > 0:
+                if self.player_num == '2':
+                    self.assets.p2_bubble_rect.y -= 1
+                    self.assets.p2_bubble_rect.x += .9
+                    self.assets.p2_bubble_rect.w -= .005
+                    self.assets.p2_bubble_rect.h -= .005
+                    img = pygame.transform.scale(img, (self.assets.p2_bubble_rect.w, self.assets.p2_bubble_rect.h))
+                    return [{'layer': 4, 'type': 'image', 'image': img, 'color': (0, 0, 0),
+                             'rect': self.empty_rect, 'pos': (x + self.assets.p2_bubble_rect.x, y - self.assets.p2_bubble_rect.y), 'radius': 0}]
+                else:
+                    self.assets.p1_bubble_rect.y -= 1
+                    self.assets.p1_bubble_rect.x += .9
+                    self.assets.p1_bubble_rect.w -= .005
+                    self.assets.p1_bubble_rect.h -= .005
+                    img = pygame.transform.scale(img, (self.assets.p1_bubble_rect.w, self.assets.p1_bubble_rect.h))
+                    return [{'layer': 4, 'type': 'image', 'image': img, 'color': (0, 0, 0),
+                             'rect': self.empty_rect, 'pos': (x + self.assets.p1_bubble_rect.x, y - self.assets.p1_bubble_rect.y), 'radius': 0}]
+            else:
+                return [{'layer': 4, 'type': 'image', 'image': img, 'color': (0, 0, 0),
+                         'rect': self.empty_rect, 'pos': (x, y), 'radius': 0}]
         else:
-            # default to player 1 color
-            color = (77, 146, 188)  # blue
-        w, h = 3, 4
-        midtop_x, midtop_y = self.rect.midtop[0] - (self.rect.size[0]/4), self.rect.midtop[1] - 10
-        left = (midtop_x + w, midtop_y + (h * 2))
-        top = (midtop_x + (w * 2), midtop_y + (h * 3))
-        right = (midtop_x + (w * 3), midtop_y + (h * 2))
-        # rect is points for polygon
-        return [{'layer': 4, 'type': 'polygon', 'image': False, 'color': color,
-                'rect': [left, top, right], 'pos': self.rect.midtop, 'radius': 0}]
+            return []
 
     def update(self, surface, controls, level_walls, collidables=[]):
         self.set_movement(controls, level_walls, collidables)

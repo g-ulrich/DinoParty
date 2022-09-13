@@ -31,6 +31,12 @@ class SpriteSheet(object):
 
 class PlayerAssets:
     def __init__(self, player_num):
+        # player bubbles
+        self.sheet_bubble = SpriteSheet('assets/dinoSprites/p1p2bubbles.png')
+        self.p1_bubble = self.sheet_bubble.get_image(0, 0, 14, 14)
+        self.p2_bubble = self.sheet_bubble.get_image(0, 14, 14, 14)
+        self.p1_bubble_rect = self.p1_bubble.get_rect()
+        self.p2_bubble_rect = self.p2_bubble.get_rect()
         # no conversion to keep transparency
         self.dino_shadow = pygame.image.load('assets/dinoSprites/shadow.png')
         # blue dino for player 1 and red for player 2
