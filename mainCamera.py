@@ -51,12 +51,7 @@ class SpriteGroup(pygame.sprite.Group):
         surface.blit(text, (10, surface.get_height() - 10 - text.get_height()))
 
     def blit_zoom(self, surface, controls):
-        zoom_out = controls.obj['1']['zoom_out']
-        zoom_in = controls.obj['1']['zoom_in']
-        if zoom_out:
-            text = self.assets.font.bold.render(f"Zoom: {round(self.zoom_scale, 2)}", True, self.colors.white)
-            surface.blit(text, (10, surface.get_height() - 10 - (text.get_height() * 2)))
-        elif zoom_in:
+        if controls.obj['1']['zoom_out'] or controls.obj['1']['zoom_in']:
             text = self.assets.font.bold.render(f"Zoom: {round(self.zoom_scale, 2)}", True, self.colors.white)
             surface.blit(text, (10, surface.get_height() - 10 - (text.get_height() * 2)))
 

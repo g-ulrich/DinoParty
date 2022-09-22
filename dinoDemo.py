@@ -8,13 +8,14 @@ from gun import Gun
 
 
 class DinoDemo:
-    def __init__(self, colors, sounds):
+    def __init__(self, general, colors, sounds):
         # mouse visibility
+        self.general = general
         self.sounds = sounds
         self.sounds.play_demo_song()
         self.graphics_queue = GraphicsQueue()
         self.colors = colors
-        self.assets = DinoDemoAssets()
+        self.assets = DinoDemoAssets(general)
         self.level_img = self.assets.level_images[0]
         self.level_img_index = 0
         self.level_img_timer = datetime.now()
@@ -138,8 +139,15 @@ class DinoDemo:
             elif "border" in key:
                 pygame.draw.rect(surface, self.colors.blue, rect, 1)
 
+    def blit_ocean_particles(self, zoom_scale, controls):
+       self.assets.particles.blit_particles(self.general.screen_surface, zoom_scale, controls)
+
     def update(self, surface, controls, zoom_scale):
         self.blit_level(surface, controls, zoom_scale)
+        self.blit_ocean_particles(zoom_scale, controls)
+
+
+
         # self.blit_dotted_line_and_cross_hair(surface, zoom_scale, self.p1.torso_rect)
 
         # self.blit_walls_rects(surface)

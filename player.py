@@ -110,7 +110,7 @@ class Player:
                         self.assets.dino_run) - 1 else 0
 
         elif self.hit >= 0:
-            if (datetime.now() - self.hit_timer).total_seconds() > .15:
+            if (datetime.now() - self.hit_timer).total_seconds() > .5:
                 self.hit_timer = datetime.now()
                 if self.facing_right:
                     self.img = self.assets.dino_hit[self.sprite_hit_i]

@@ -29,6 +29,69 @@ class SpriteSheet(object):
         return image
 
 
+class OceanParticleAffect:
+    def __init__(self, general, num=25, primary_color=(111, 166, 165), secondary_color=(255, 255, 255)):
+        self.primary_color = primary_color
+        self.secondary_color = secondary_color
+        self.level_rect = general.screen_surface.get_rect()
+        # particle weight counter
+        self.timer = datetime.now()
+        self.index = 0
+        # last zoom scale
+        self.last_zoom_scale = 4
+        self.water_speed_in_1000 = 1000
+        # generate particles
+        self.particles = []
+        self.particles_append = self.particles.append
+        self.add_particles(num)
+
+    def add_particles(self, num, rand=True):
+        for i in range(num):
+            if rand:
+                pos = pygame.math.Vector2((randint(self.level_rect.x, self.level_rect.w),
+                                           randint(self.level_rect.y, self.level_rect.h)))
+            else:
+                pos = pygame.math.Vector2((self.level_rect.w + randint(1, 10),
+                                           randint(self.level_rect.y, self.level_rect.h)))
+            color = choice(
+                [self.primary_color, self.primary_color, self.primary_color, self.secondary_color, (127, 127, 127), ])
+            rand_int = randint(1, 3)
+            dir = choice((['left']) + ['down', 'up'])
+            self.particles_append([pygame.Rect(pos.x, pos.y, rand_int * 2, rand_int), color, dir])
+
+    def blit_particles(self, screen_surface, zoom_scale, controls):
+        for index, arr in enumerate(self.particles, 0):
+            arr[0].x -= randint(1, 2) / choice([10, 100, 1000, 1000, 1000])
+            if arr[2] == 'down' and choice([True, False, False, False]):
+                arr[0].y += randint(0, 5) / 10000
+            elif arr[2] == 'up' and choice([True, False, False, False]):
+                arr[0].y -= randint(0, 5) / 10000
+            if self.last_zoom_scale != zoom_scale:
+                if controls.obj['1']['zoom_in']:
+                    arr[0].y += zoom_scale / 5
+                    # all particles above center
+                    # if arr[0].y >= self.level_rect.h / 2:
+                    #     arr[0].y += zoom_scale / 5
+                    #     # all particles below center
+                    # elif arr[0].y < self.level_rect.h / 2:
+                    #     arr[0].y -= zoom_scale / 5
+                if controls.obj['1']['zoom_out']:
+                    # if arr[0].y < self.level_rect.h / 2:
+                    #     arr[0].y += zoom_scale / 5
+                    # elif arr[0].y > self.level_rect.h / 2:
+                    arr[0].y -= zoom_scale / 5
+            pygame.draw.rect(screen_surface, arr[1], (arr[0].x, arr[0].y, arr[0].w + (zoom_scale * 2), arr[0].h + (zoom_scale * 2)))
+            if arr[0].left <= self.level_rect.left or arr[0].top <= self.level_rect.top or arr[
+                0].bottom >= self.level_rect.bottom:
+                try:
+                    self.add_particles(1, rand=False)
+                    del self.particles[index]
+                except:
+                    self.add_particles(1, rand=False)
+                    del self.particles[index]
+        self.last_zoom_scale = zoom_scale
+
+
 class PlayerAssets:
     def __init__(self, player_num):
         # player bubbles
@@ -147,15 +210,16 @@ class Explosion:
 
     def iterate(self, offset=(0, 0)):
         queue = {'layer': -100, 'type': 'circle', 'image': False, 'color': (255, 255, 255),
-                             'rect': self.empty_rect, 'pos': self.center,
-                             'radius': 0, 'angle': (0, 0), 'dir': -1, 'hit': 0, 'width': 0}
+                 'rect': self.empty_rect, 'pos': self.center,
+                 'radius': 0, 'angle': (0, 0), 'dir': -1, 'hit': 0, 'width': 0}
         if self.start:
             if self.width >= 1:
                 complete_offset = self.center - offset
                 self.radius += round(self.exp_index)
                 self.width -= round(self.exp_index)
                 self.exp_index = self.exp_index + .08 if self.width > 3 else self.exp_index + .01
-                queue = {'layer': 99, 'type': 'circle', 'image': False, 'color': choice([self.color, self.second_color]),
+                queue = {'layer': 99, 'type': 'circle', 'image': False,
+                         'color': choice([self.color, self.second_color]),
                          'rect': self.empty_rect, 'pos': self.center if offset != (0, 0) else complete_offset,
                          'radius': self.radius, 'angle': (0, 0), 'dir': -1, 'hit': 0, 'width': self.width}
                 self.hit_box_rect.x = complete_offset[0] - (self.radius / 2)
@@ -224,8 +288,9 @@ class ControlsAssets:
 
 
 class DinoDemoAssets:
-    def __init__(self):
+    def __init__(self, general):
         self.guns = GunAssets()
+        self.particles = OceanParticleAffect(general)
         self.decorations = DecorationAssets()
         self.level_images = [
             pygame.image.load('assets/levels/demo/demo0.png'),
